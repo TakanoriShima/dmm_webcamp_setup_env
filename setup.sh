@@ -38,14 +38,14 @@ fi
 rbenv global 3.1.2
 
 # Nokogiri のインストール
-gem install nokogiri -v 1.15.6 -- --use-system-libraries
+gem install nokogiri -v 1.16.6 -- --use-system-libraries
 
 # Rails 6.1.4 のインストール
 gem install rails -v 6.1.4
 
 # Node.js 18 のインストール
-if ! node -v | grep -q 'v18'; then
-  curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+if ! node -v | grep -q 'v16'; then
+  curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
   sudo yum install -y nodejs
 fi
 
