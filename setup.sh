@@ -43,7 +43,7 @@ gem install nokogiri -v 1.16.6 -- --use-system-libraries
 # Rails 6.1.4 のインストール
 gem install rails -v 6.1.4
 
-# Node.js 18 のインストール
+# Node.js 16 のインストール
 if ! node -v | grep -q 'v16'; then
   curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
   sudo yum install -y nodejs
