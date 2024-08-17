@@ -44,13 +44,13 @@ gem install nokogiri -v 1.15.6 -- --use-system-libraries
 gem install rails -v 6.1.4
 
 # Node.js 18 のインストール
-# if ! node -v | grep -q 'v18'; then
-#   curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-#   sudo yum install -y nodejs
-# fi
+if ! node -v | grep -q 'v18'; then
+  curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+  sudo yum install -y nodejs
+fi
 
 # Yarn のインストール
-#sudo npm install --global yarn
+sudo npm install --global yarn
 
 # PHP 8.2 のインストール
 sudo amazon-linux-extras enable php8.2
