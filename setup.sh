@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 結果を格納する変数を初期化
+installation_results=""
+
 # swap領域 を拡張
 if ! swapon --show | grep -q '/var/swap.1'; then
   sudo dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
@@ -11,12 +14,15 @@ fi
 
 # パッケージ情報の更新
 sudo yum update -y
+if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が失敗しました。\n"; fi
 
 # 必要なツールとライブラリのインストール
 sudo yum install -y git bzip2 gcc openssl-devel readline-devel zlib-devel libffi-devel
+if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
 
 # 開発ツールのインストール（主要な開発ライブラリを含む）
 sudo yum groupinstall -y "Development Tools"
+if [ $? -ne 0 ]; then installation_results+="開発ツールのインストールが失敗しました。\n"; fi
 
 # rbenv のインストール
 if [ ! -d "$HOME/.rbenv" ]; then
@@ -25,36 +31,44 @@ if [ ! -d "$HOME/.rbenv" ]; then
   echo 'eval "$(rbenv init -)"' >> ~/.bashrc
   source ~/.bashrc
 fi
+if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗しました。\n"; fi
 
 # ruby-build のインストール
 if [ ! -d "$HOME/.rbenv/plugins/ruby-build" ]; then
   git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 fi
+if [ $? -ne 0 ]; then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
 
 # Ruby 3.1.2 のインストール
 if ! rbenv versions | grep -q '3.1.2'; then
   rbenv install 3.1.2
 fi
 rbenv global 3.1.2
+if [ $? -ne 0 ]; then installation_results+="Ruby 3.1.2のインストールが失敗しました。\n"; fi
 
 # Nokogiri のインストール
 gem install nokogiri -v 1.16.6 -- --use-system-libraries
+if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
 
 # Rails 6.1.4 のインストール
 gem install rails -v 6.1.4
+if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
 # Node.js 16 のインストール
 if ! node -v | grep -q 'v16'; then
   curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
   sudo yum install -y nodejs
 fi
+if [ $? -ne 0 ]; then installation_results+="Node.js 16のインストールが失敗しました。\n"; fi
 
 # Yarn のインストール
 sudo npm install --global yarn
+if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
 sudo amazon-linux-extras enable php8.2
 sudo yum install -y php-cli php-pdo php-mbstring php-mysqlnd php-json php-gd php-openssl php-curl php-xml php-intl 
+if [ $? -ne 0 ]; then installation_results+="PHP 8.2のインストールが失敗しました。\n"; fi
 
 # composer のインストール
 if ! command -v composer > /dev/null; then
@@ -64,10 +78,12 @@ if ! command -v composer > /dev/null; then
   php -r "unlink('composer-setup.php');"
   sudo mv composer.phar /usr/local/bin/composer
 fi
+if [ $? -ne 0 ]; then installation_results+="Composerのインストールが失敗しました。\n"; fi
 
 # MariaDB のインストール
 sudo amazon-linux-extras enable mariadb10.5
 sudo yum -y install mariadb
+if [ $? -ne 0 ]; then installation_results+="MariaDBのインストールが失敗しました。\n"; fi
 
 # ターミナルのプロンプト表示設定
 PROMPT_SCRIPT="/home/ec2-user/prompt.sh"
@@ -82,6 +98,7 @@ if [ ! -f "$PROMPT_SCRIPT" ]; then
   echo 'source ~/prompt.sh' >> /home/ec2-user/.bashrc
   echo 'source ~/prompt.sh' >> /home/ec2-user/.bash_profile
 fi
+if [ $? -ne 0 ]; then installation_results+="プロンプト設定が失敗しました。\n"; fi
 
 # シェルの設定を再読み込み
 source ~/.bashrc
@@ -89,5 +106,11 @@ source ~/.bash_profile
 
 # クリーンアップ
 sudo yum clean all
+if [ $? -ne 0 ]; then installation_results+="クリーンアップが失敗しました。\n"; fi
 
-echo "環境構築が完了しました。"
+# 結果の表示
+if [ -z "$installation_results" ]; then
+  echo "すべてのライブラリが正常にインストールされました。環境構築が完了しました。"
+else
+  echo -e "$installation_results"
+fi
