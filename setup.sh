@@ -54,12 +54,29 @@ if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失
 gem install rails -v 6.1.4
 if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
-# Node.js 16 のインストール
-if ! node -v | grep -q 'v16'; then
-  curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-  sudo yum install -y nodejs
+# nvmのインストール
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# Node.js 18をインストール
+if ! node -v | grep -q 'v18'; then
+  curl -O https://unofficial-builds.nodejs.org/download/release/v18.17.1/node-v18.17.1-linux-x64-glibc-217.tar.gz
+  tar -xzf node-v18.17.1-linux-x64-glibc-217.tar.gz
+  mkdir -p ~/.nvm/versions/node/v18.17.1-custom
+  mv ~/node-v18.17.1-linux-x64-glibc-217/* ~/.nvm/versions/node/v18.17.1-custom/
+  export PATH=$PATH:~/.nvm/versions/node/v18.17.1-custom/bin/
+  source ~/.bashrc
+  nvm alias default v18.17.1-custom
+  nvm use v18.17.1-custom
 fi
-if [ $? -ne 0 ]; then installation_results+="Node.js 16のインストールが失敗しました。\n"; fi
+if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
+
+# npm のインストール確認
+if ! command -v npm > /dev/null; then
+  installation_results+="npmが正しくインストールされていません。\n"
+fi
 
 # Yarn のインストール
 sudo npm install --global yarn
