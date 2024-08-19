@@ -59,7 +59,7 @@ NODE_VERSION="18.20.4"
 curl -O "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz"
 tar -xzf "node-v$NODE_VERSION.tar.gz"
 cd "node-v$NODE_VERSION"
-./configure
+./configure --with-intl=small --openssl-no-legacy
 make -j$(nproc)
 sudo make install
 cd ..
