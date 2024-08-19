@@ -61,7 +61,7 @@ if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが
 
 # Nokogiri のインストール
 gem install nokogiri -v 1.16.6 -- --use-system-libraries
-if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; f
+if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
 
 # Composer のインストール
 if ! command -v composer > /dev/null; then
