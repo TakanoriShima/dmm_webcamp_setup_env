@@ -3,74 +3,54 @@
 # 結果を格納する変数を初期化
 installation_results=""
 
-# swap領域を拡張
-if ! swapon --show | grep -q '/var/swap.1'; then
-  sudo dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
-  sudo chmod 600 /var/swap.1
-  sudo mkswap /var/swap.1
-  sudo swapon /var/swap.1
-  sudo sh -c "echo '/var/swap.1 swap swap defaults 0 0' >> /etc/fstab"
-fi
-
 # パッケージ情報の更新
 sudo yum update -y
 if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が失敗しました。\n"; fi
 
 # 必要なツールとライブラリのインストール
-sudo yum install -y git bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel curl
+sudo yum install -y git curl bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel
 if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
 
-# rbenv のインストール
+# NVMのインストール
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+if [ $? -ne 0 ]; then installation_results+="NVMのインストールが失敗しました。\n"; fi
+
+# NVMを使用できるようにするための設定
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # NVMの初期化
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+
+# NVMを使用してNode.js 18をインストール
+nvm install 18
+if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
+
+# Rubyのインストール (rbenvを使用)
 if [ ! -d "$HOME/.rbenv" ]; then
   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
   echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
   echo 'eval "$(rbenv init -)"' >> ~/.bashrc
   source ~/.bashrc
-fi
-if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗しました。\n"; fi
 
-# ruby-build のインストール
-if [ ! -d "$HOME/.rbenv/plugins/ruby-build" ]; then
+  # ruby-buildのインストール
   git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 fi
-if [ $? -ne 0 ]; then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
+if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗しました。\n"; fi
 
 # Ruby 3.1.2 のインストール
 if ! rbenv versions | grep -q '3.1.2'; then
   rbenv install 3.1.2
+  rbenv global 3.1.2
 fi
-rbenv global 3.1.2
 if [ $? -ne 0 ]; then installation_results+="Ruby 3.1.2のインストールが失敗しました。\n"; fi
-
-# Nokogiri のインストール
-gem install nokogiri -v 1.16.6 -- --use-system-libraries
-if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
 
 # Rails 6.1.4 のインストール
 gem install rails -v 6.1.4
 if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
-# nvm のインストール
-if [ ! -d "$HOME/.nvm" ]; then
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-  echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
-  echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
-  source ~/.bashrc
-fi
-
-# Node.js 18 のインストール
-nvm install 18
-nvm use 18
-if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
-
-# Yarn のインストール
-npm install --global yarn
-if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
-
-# PHP 8.2 のインストール
-sudo amazon-linux-extras enable php8.2
-sudo yum install -y php-cli php-pdo php-mbstring php-mysqlnd php-json php-gd php-openssl php-curl php-xml php-intl 
-if [ $? -ne 0 ]; then installation_results+="PHP 8.2のインストールが失敗しました。\n"; fi
+# Nokogiri のインストール
+gem install nokogiri -v 1.16.6 -- --use-system-libraries
+if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
 
 # Composer のインストール
 if ! command -v composer > /dev/null; then
@@ -82,33 +62,10 @@ if ! command -v composer > /dev/null; then
 fi
 if [ $? -ne 0 ]; then installation_results+="Composerのインストールが失敗しました。\n"; fi
 
-# MariaDB のインストール
-sudo amazon-linux-extras enable mariadb10.5
-sudo yum -y install mariadb
-if [ $? -ne 0 ]; then installation_results+="MariaDBのインストールが失敗しました。\n"; fi
-
-# ターミナルのプロンプト表示設定
-PROMPT_SCRIPT="/home/ec2-user/prompt.sh"
-if [ ! -f "$PROMPT_SCRIPT" ]; then
-  echo '#!/bin/sh' > $PROMPT_SCRIPT
-  echo 'parse_git_branch() {' >> $PROMPT_SCRIPT
-  echo '    git branch 2> /dev/null | sed -e '\''/^[^*]/d'\'' -e '\''s/* \(.*\)/ (\1)/'\''' >> $PROMPT_SCRIPT
-  echo '}' >> $PROMPT_SCRIPT
-  echo 'export PS1="\[\033[01;32m\]\u\[\033[00m\]:\[\033[34m\]\w\[\033[00m\]\$(parse_git_branch) $ "' >> $PROMPT_SCRIPT
-
-  sudo chmod 755 $PROMPT_SCRIPT
-  echo 'source ~/prompt.sh' >> /home/ec2-user/.bashrc
-  echo 'source ~/prompt.sh' >> /home/ec2-user/.bash_profile
-fi
-if [ $? -ne 0 ]; then installation_results+="プロンプト設定が失敗しました。\n"; fi
-
-# シェルの設定を再読み込み
-source ~/.bashrc
-source ~/.bash_profile
-
-# クリーンアップ
-sudo yum clean all
-if [ $? -ne 0 ]; then installation_results+="クリーンアップが失敗しました。\n"; fi
+# PHP 8.2 のインストール
+sudo amazon-linux-extras enable php8.2
+sudo yum install -y php-cli php-pdo php-mbstring php-mysqlnd php-json php-gd php-openssl php-curl php-xml php-intl 
+if [ $? -ne 0 ]; then installation_results+="PHP 8.2のインストールが失敗しました。\n"; fi
 
 # 結果の表示
 if [ -z "$installation_results" ]; then
@@ -116,4 +73,3 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
-
