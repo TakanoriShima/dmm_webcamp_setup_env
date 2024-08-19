@@ -63,20 +63,46 @@ if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが
 gem install nokogiri -v 1.16.6 -- --use-system-libraries
 if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
 
-# Composer のインストール
-if ! command -v composer > /dev/null; then
-  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-  php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-  php composer-setup.php
-  php -r "unlink('composer-setup.php');"
-  sudo mv composer.phar /usr/local/bin/composer
-fi
-if [ $? -ne 0 ]; then installation_results+="Composerのインストールが失敗しました。\n"; fi
+# # Composer のインストール
+# if ! command -v composer > /dev/null; then
+#   php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+#   php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+#   php composer-setup.php
+#   php -r "unlink('composer-setup.php');"
+#   sudo mv composer.phar /usr/local/bin/composer
+# fi
+# if [ $? -ne 0 ]; then installation_results+="Composerのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
 sudo amazon-linux-extras enable php8.2
 sudo yum install -y php-cli php-pdo php-mbstring php-mysqlnd php-json php-gd php-openssl php-curl php-xml php-intl 
 if [ $? -ne 0 ]; then installation_results+="PHP 8.2のインストールが失敗しました。\n"; fi
+
+# composer のインストール
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+sudo mv composer.phar /usr/local/bin/composer
+
+# MariaDB のインストール
+sudo amazon-linux-extras enable mariadb10.5
+sudo yum -y install mariadb
+
+# ターミナルのプロンプト表示設定
+echo '#!/bin/sh' > /home/ec2-user/prompt.sh
+echo 'parse_git_branch() {' >> /home/ec2-user/prompt.sh
+echo '    git branch 2> /dev/null | sed -e '\''/^[^*]/d'\'' -e '\''s/* \(.*\)/ (\1)/'\''' >> /home/ec2-user/prompt.sh
+echo '}' >> /home/ec2-user/prompt.sh
+echo 'export PS1="\[\033[01;32m\]\u\[\033[00m\]:\[\033[34m\]\w\[\033[00m\]\$(parse_git_branch) $ "' >> /home/ec2-user/prompt.sh
+
+sudo chmod 755 /home/ec2-user/prompt.sh
+echo 'source ~/prompt.sh' >> /home/ec2-user/.bashrc
+echo 'source ~/prompt.sh' >> /home/ec2-user/.bash_profile
+
+# シェルの設定を再読み込み
+source ~/.bashrc
+source ~/.bash_profile
 
 # 結果の表示
 if [ -z "$installation_results" ]; then
