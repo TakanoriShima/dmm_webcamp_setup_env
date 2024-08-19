@@ -17,7 +17,7 @@ sudo yum update -y
 if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が失敗しました。\n"; fi
 
 # 必要なツールとライブラリのインストール
-sudo yum install -y git bzip2 gcc openssl-devel readline-devel zlib-devel libffi-devel
+sudo yum install -y git bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel
 if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
 
 # 開発ツールのインストール（主要な開発ライブラリを含む）
@@ -37,7 +37,7 @@ if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗
 if [ ! -d "$HOME/.rbenv/plugins/ruby-build" ]; then
   git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 fi
-if [ $? -ne 0 ];then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
+if [ $? -ne 0 ]; then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
 
 # Ruby 3.1.2 のインストール
 if ! rbenv versions | grep -q '3.1.2'; then
@@ -54,37 +54,20 @@ if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失
 gem install rails -v 6.1.4
 if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
-# Node.js 18.x のソースコードをダウンロード
-NODE_VERSION="v18.17.1"
-curl -o node-${NODE_VERSION}.tar.gz https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}.tar.gz
-if [ $? -ne 0 ]; then installation_results+="Node.js ソースコードのダウンロードが失敗しました。\n"; fi
-
-# ソースコードの展開
-tar -xzf node-${NODE_VERSION}.tar.gz
-if [ $? -ne 0 ]; then installation_results+="Node.js ソースコードの展開が失敗しました。\n"; fi
-
-# Node.js のビルドとインストール
-cd node-${NODE_VERSION}
+# Node.js 18 をソースからビルドする
+NODE_VERSION="18.20.4"
+curl -O "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz"
+tar -xzf "node-v$NODE_VERSION.tar.gz"
+cd "node-v$NODE_VERSION"
 ./configure
-if [ $? -ne 0 ]; then installation_results+="Node.js の構成が失敗しました。\n"; fi
-
 make -j$(nproc)
-if [ $? -ne 0 ]; then installation_results+="Node.js のビルドが失敗しました。\n"; fi
-
 sudo make install
-if [ $? -ne 0 ]; then installation_results+="Node.js のインストールが失敗しました。\n"; fi
-
-# Node.js と npm のインストール確認
-if ! command -v node > /dev/null; then
-  installation_results+="Node.js が正しくインストールされていません。\n"
-fi
-
-if ! command -v npm > /dev/null; then
-  installation_results+="npm が正しくインストールされていません。\n"
-fi
+cd ..
+rm -rf "node-v$NODE_VERSION" "node-v$NODE_VERSION.tar.gz"
+if [ $? -ne 0 ]; then installation_results+="Node.js のソースビルドが失敗しました。\n"; fi
 
 # Yarn のインストール
-sudo npm install --global yarn
+sudo npm install --global yarn --unsafe-perm
 if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
@@ -92,7 +75,7 @@ sudo amazon-linux-extras enable php8.2
 sudo yum install -y php-cli php-pdo php-mbstring php-mysqlnd php-json php-gd php-openssl php-curl php-xml php-intl 
 if [ $? -ne 0 ]; then installation_results+="PHP 8.2のインストールが失敗しました。\n"; fi
 
-# composer のインストール
+# Composer のインストール
 if ! command -v composer > /dev/null; then
   php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
   php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
@@ -127,8 +110,6 @@ source ~/.bashrc
 source ~/.bash_profile
 
 # クリーンアップ
-cd ..
-rm -rf node-${NODE_VERSION} node-${NODE_VERSION}.tar.gz
 sudo yum clean all
 if [ $? -ne 0 ]; then installation_results+="クリーンアップが失敗しました。\n"; fi
 
@@ -138,4 +119,3 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
-
