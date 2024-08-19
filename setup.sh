@@ -11,25 +11,30 @@ if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が�
 sudo yum install -y git curl bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel
 if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
 
-# NVMのインストール
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-if [ $? -ne 0 ]; then installation_results+="NVMのインストールが失敗しました。\n"; fi
+# Node.js のバージョンとインストールディレクトリを設定
+NODE_VER=v18.18.2
+NODE_DIR=/usr/local/share/node 
 
-# NVMを使用できるようにするための設定
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # NVMの初期化
-echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
-echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+# Node.js のインストールに必要なパッケージをインストール
+sudo yum install -y wget tar gzip
 
-# Node.js 18 のインストール（バイナリを使用）
-nvm install 18
-if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
+# Node.js のダウンロード＆インストール
+wget -nv https://d3rnber7ry90et.cloudfront.net/linux-x86_64/node-${NODE_VER}.tar.gz
+tar -xf node-${NODE_VER}.tar.gz
+sudo mv node-${NODE_VER} ${NODE_DIR}
+
+# バイナリへのリンクを貼る
+sudo ln -s ${NODE_DIR}/bin/corepack /usr/local/bin/corepack
+sudo ln -s ${NODE_DIR}/bin/node /usr/local/bin/node
+sudo ln -s ${NODE_DIR}/bin/npm /usr/local/bin/npm
+sudo ln -s ${NODE_DIR}/bin/npx /usr/local/bin/npx
 
 # Rubyのインストール (rbenvを使用)
 if [ ! -d "$HOME/.rbenv" ]; then
   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
   echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
   echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+  # ~/.bashrc の変更を反映
   source ~/.bashrc
 
   # ruby-buildのインストール
@@ -73,5 +78,5 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
-i
+
 
