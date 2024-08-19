@@ -17,12 +17,8 @@ sudo yum update -y
 if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が失敗しました。\n"; fi
 
 # 必要なツールとライブラリのインストール
-sudo yum install -y git bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel
+sudo yum install -y git bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel curl
 if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
-
-# 開発ツールのインストール（主要な開発ライブラリを含む）
-sudo yum groupinstall -y "Development Tools"
-if [ $? -ne 0 ]; then installation_results+="開発ツールのインストールが失敗しました。\n"; fi
 
 # rbenv のインストール
 if [ ! -d "$HOME/.rbenv" ]; then
@@ -54,20 +50,21 @@ if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失
 gem install rails -v 6.1.4
 if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
-# Node.js 18 をソースからビルドする
-NODE_VERSION="18.20.4"
-curl -O "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz"
-tar -xzf "node-v$NODE_VERSION.tar.gz"
-cd "node-v$NODE_VERSION"
-./configure --with-intl=full-icu --openssl-no-legacy
-make -j$(nproc)
-sudo make install
-cd ..
-rm -rf "node-v$NODE_VERSION" "node-v$NODE_VERSION.tar.gz"
-if [ $? -ne 0 ]; then installation_results+="Node.js のソースビルドが失敗しました。\n"; fi
+# nvm のインストール
+if [ ! -d "$HOME/.nvm" ]; then
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+  echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
+  echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
+  source ~/.bashrc
+fi
+
+# Node.js 18 のインストール
+nvm install 18
+nvm use 18
+if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
 
 # Yarn のインストール
-sudo npm install --global yarn --unsafe-perm
+npm install --global yarn
 if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
@@ -119,3 +116,4 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
+
