@@ -9,25 +9,8 @@ if [ $? -ne 0 ]; then installation_results+="パッケージ情報の更新が�
 
 # 必要なツールとライブラリのインストール
 sudo yum install -y git curl bzip2 gcc gcc-c++ make openssl-devel readline-devel zlib-devel libffi-devel
+sudo yum -y install patch libyaml-devel zlib zlib-devel libffi-devel make autoconf automake libcurl-devel sqlite-devel mysql-devel
 if [ $? -ne 0 ]; then installation_results+="必要なツールとライブラリのインストールが失敗しました。\n"; fi
-
-# Node.js のバージョンとインストールディレクトリを設定
-NODE_VER=v18.18.2
-NODE_DIR=/usr/local/share/node 
-
-# Node.js のインストールに必要なパッケージをインストール
-sudo yum install -y wget tar gzip
-
-# Node.js のダウンロード＆インストール
-wget -nv https://d3rnber7ry90et.cloudfront.net/linux-x86_64/node-${NODE_VER}.tar.gz
-tar -xf node-${NODE_VER}.tar.gz
-sudo mv node-${NODE_VER} ${NODE_DIR}
-
-# バイナリへのリンクを貼る
-sudo ln -s ${NODE_DIR}/bin/corepack /usr/local/bin/corepack
-sudo ln -s ${NODE_DIR}/bin/node /usr/local/bin/node
-sudo ln -s ${NODE_DIR}/bin/npm /usr/local/bin/npm
-sudo ln -s ${NODE_DIR}/bin/npx /usr/local/bin/npx
 
 # Rubyのインストール (rbenvを使用)
 if [ ! -d "$HOME/.rbenv" ]; then
@@ -46,8 +29,31 @@ if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗
 if ! rbenv versions | grep -q '3.1.2'; then
   rbenv install 3.1.2
   rbenv global 3.1.2
+  rbenv rehash
+  rbenv exec gem install bundler
 fi
 if [ $? -ne 0 ]; then installation_results+="Ruby 3.1.2のインストールが失敗しました。\n"; fi
+
+# Node.js 16 のバージョンとインストールディレクトリを設定
+NODE_VER=v18.18.2
+NODE_DIR=/usr/local/share/node 
+
+# Node.js 18 のインストールに必要なパッケージをインストール
+sudo yum install -y wget tar gzip
+
+# Node.js 18 のダウンロード＆インストール
+wget -nv https://d3rnber7ry90et.cloudfront.net/linux-x86_64/node-${NODE_VER}.tar.gz
+tar -xf node-${NODE_VER}.tar.gz
+sudo mv node-${NODE_VER} ${NODE_DIR}
+
+# バイナリへのリンクを貼る
+sudo ln -s ${NODE_DIR}/bin/corepack /usr/local/bin/corepack
+sudo ln -s ${NODE_DIR}/bin/node /usr/local/bin/node
+sudo ln -s ${NODE_DIR}/bin/npm /usr/local/bin/npm
+sudo ln -s ${NODE_DIR}/bin/npx /usr/local/bin/npx
+
+# yarn のインストール
+npm install -g yarn
 
 # Rails 6.1.4 のインストール
 gem install rails -v 6.1.4
@@ -55,7 +61,7 @@ if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが
 
 # Nokogiri のインストール
 gem install nokogiri -v 1.16.6 -- --use-system-libraries
-if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; fi
+if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失敗しました。\n"; f
 
 # Composer のインストール
 if ! command -v composer > /dev/null; then
