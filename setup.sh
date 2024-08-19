@@ -21,9 +21,9 @@ export NVM_DIR="$HOME/.nvm"
 echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.bashrc
 echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ~/.bashrc
 
-# NVMを使用してNode.js 18をソースからビルド
-nvm install 18 --build-from-source
-if [ $? -ne 0 ]; then installation_results+="Node.js 18のソースビルドが失敗しました。\n"; fi
+# Node.js 18 のインストール（バイナリを使用）
+nvm install 18
+if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
 
 # Rubyのインストール (rbenvを使用)
 if [ ! -d "$HOME/.rbenv" ]; then
@@ -73,4 +73,5 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
+i
 
