@@ -62,14 +62,10 @@ export NVM_DIR="$HOME/.nvm"
 
 # Node.js 18をインストール
 if ! node -v | grep -q 'v18'; then
-  curl -O https://unofficial-builds.nodejs.org/download/release/v18.17.1/node-v18.17.1-linux-x64-glibc-217.tar.gz
-  tar -xzf node-v18.17.1-linux-x64-glibc-217.tar.gz
-  mkdir -p ~/.nvm/versions/node/v18.17.1-custom
-  mv ~/node-v18.17.1-linux-x64-glibc-217/* ~/.nvm/versions/node/v18.17.1-custom/
-  export PATH=$PATH:~/.nvm/versions/node/v18.17.1-custom/bin/
-  source ~/.bashrc
-  nvm alias default v18.17.1-custom
-  nvm use v18.17.1-custom
+  . ~/.nvm/nvm.sh # nvmを初期化
+  nvm install 18
+  nvm use 18
+  nvm alias default 18
 fi
 if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
 
@@ -79,7 +75,7 @@ if ! command -v npm > /dev/null; then
 fi
 
 # Yarn のインストール
-sudo npm install --global yarn
+npm install --global yarn
 if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
