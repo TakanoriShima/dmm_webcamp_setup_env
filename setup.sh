@@ -37,7 +37,7 @@ if [ $? -ne 0 ]; then installation_results+="rbenvのインストールが失敗
 if [ ! -d "$HOME/.rbenv/plugins/ruby-build" ]; then
   git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 fi
-if [ $? -ne 0 ]; then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
+if [ $? -ne 0 ];then installation_results+="ruby-buildのインストールが失敗しました。\n"; fi
 
 # Ruby 3.1.2 のインストール
 if ! rbenv versions | grep -q '3.1.2'; then
@@ -54,28 +54,37 @@ if [ $? -ne 0 ]; then installation_results+="Nokogiriのインストールが失
 gem install rails -v 6.1.4
 if [ $? -ne 0 ]; then installation_results+="Rails 6.1.4のインストールが失敗しました。\n"; fi
 
-# nvmのインストール
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# Node.js 18.x のソースコードをダウンロード
+NODE_VERSION="v18.17.1"
+curl -o node-${NODE_VERSION}.tar.gz https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}.tar.gz
+if [ $? -ne 0 ]; then installation_results+="Node.js ソースコードのダウンロードが失敗しました。\n"; fi
 
-# Node.js 18をインストール
-if ! node -v | grep -q 'v18'; then
-  . ~/.nvm/nvm.sh # nvmを初期化
-  nvm install 18
-  nvm use 18
-  nvm alias default 18
+# ソースコードの展開
+tar -xzf node-${NODE_VERSION}.tar.gz
+if [ $? -ne 0 ]; then installation_results+="Node.js ソースコードの展開が失敗しました。\n"; fi
+
+# Node.js のビルドとインストール
+cd node-${NODE_VERSION}
+./configure
+if [ $? -ne 0 ]; then installation_results+="Node.js の構成が失敗しました。\n"; fi
+
+make -j$(nproc)
+if [ $? -ne 0 ]; then installation_results+="Node.js のビルドが失敗しました。\n"; fi
+
+sudo make install
+if [ $? -ne 0 ]; then installation_results+="Node.js のインストールが失敗しました。\n"; fi
+
+# Node.js と npm のインストール確認
+if ! command -v node > /dev/null; then
+  installation_results+="Node.js が正しくインストールされていません。\n"
 fi
-if [ $? -ne 0 ]; then installation_results+="Node.js 18のインストールが失敗しました。\n"; fi
 
-# npm のインストール確認
 if ! command -v npm > /dev/null; then
-  installation_results+="npmが正しくインストールされていません。\n"
+  installation_results+="npm が正しくインストールされていません。\n"
 fi
 
 # Yarn のインストール
-npm install --global yarn
+sudo npm install --global yarn
 if [ $? -ne 0 ]; then installation_results+="Yarnのインストールが失敗しました。\n"; fi
 
 # PHP 8.2 のインストール
@@ -118,6 +127,8 @@ source ~/.bashrc
 source ~/.bash_profile
 
 # クリーンアップ
+cd ..
+rm -rf node-${NODE_VERSION} node-${NODE_VERSION}.tar.gz
 sudo yum clean all
 if [ $? -ne 0 ]; then installation_results+="クリーンアップが失敗しました。\n"; fi
 
@@ -127,3 +138,4 @@ if [ -z "$installation_results" ]; then
 else
   echo -e "$installation_results"
 fi
+
