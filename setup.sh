@@ -3,7 +3,7 @@
 # 結果を格納する変数を初期化
 installation_results=""
 
-# swap領域 を拡張
+# swap領域を拡張
 if ! swapon --show | grep -q '/var/swap.1'; then
   sudo dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
   sudo chmod 600 /var/swap.1
@@ -59,7 +59,7 @@ NODE_VERSION="18.20.4"
 curl -O "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.gz"
 tar -xzf "node-v$NODE_VERSION.tar.gz"
 cd "node-v$NODE_VERSION"
-./configure --with-intl=small --openssl-no-legacy
+./configure --with-intl=full-icu --openssl-no-legacy
 make -j$(nproc)
 sudo make install
 cd ..
